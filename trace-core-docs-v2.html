@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trace Core — Guida Operativa</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #21253a;
+      --border: #2e3350;
+      --accent: #6c8ef5;
+      --accent2: #a78bfa;
+      --green: #34d399;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --code-bg: #0d1117;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 260px;
+      height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 24px 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+
+    .sidebar-logo .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #6c8ef5, #a78bfa);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-logo h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .sidebar-logo p {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .nav-group {
+      margin-bottom: 4px;
+    }
+
+    .nav-group-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 10px 20px 4px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 20px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      border-left: 2px solid transparent;
+      transition: all .15s;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+      background: var(--surface2);
+      border-left-color: var(--accent);
+    }
+
+    .nav-link.active {
+      color: var(--accent);
+      background: rgba(108,142,245,.08);
+      border-left-color: var(--accent);
+    }
+
+    .nav-link .num {
+      font-size: 10px;
+      color: var(--border);
+      font-weight: 600;
+      min-width: 18px;
+    }
+
+    /* MAIN */
+    .main {
+      margin-left: 260px;
+      padding: 48px 60px;
+      max-width: 1100px;
+    }
+
+    /* HEADER */
+    .doc-header {
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .doc-header .tag-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: .04em;
+    }
+
+    .tag-blue { background: rgba(108,142,245,.15); color: var(--accent); border: 1px solid rgba(108,142,245,.3); }
+    .tag-purple { background: rgba(167,139,250,.15); color: var(--accent2); border: 1px solid rgba(167,139,250,.3); }
+    .tag-green { background: rgba(52,211,153,.15); color: var(--green); border: 1px solid rgba(52,211,153,.3); }
+
+    .doc-header h1 {
+      font-size: 32px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+
+    .doc-header .subtitle {
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 640px;
+    }
+
+    .meta-row {
+      display: flex;
+      gap: 24px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .meta-item .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    /* CALLOUT */
+    .callout {
+      display: flex;
+      gap: 12px;
+      padding: 16px 20px;
+      border-radius: 10px;
+      margin: 24px 0;
+      font-size: 13.5px;
+    }
+
+    .callout-info { background: rgba(108,142,245,.08); border: 1px solid rgba(108,142,245,.2); }
+    .callout-warn { background: rgba(251,191,36,.08); border: 1px solid rgba(251,191,36,.2); }
+    .callout-success { background: rgba(52,211,153,.08); border: 1px solid rgba(52,211,153,.2); }
+    .callout-danger { background: rgba(248,113,113,.08); border: 1px solid rgba(248,113,113,.2); }
+
+    .callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .callout-body { flex: 1; }
+    .callout-body strong { display: block; margin-bottom: 4px; }
+    .callout-info strong { color: var(--accent); }
+    .callout-warn strong { color: var(--yellow); }
+    .callout-success strong { color: var(--green); }
+    .callout-danger strong { color: var(--red); }
+
+    /* SECTIONS */
+    .section {
+      margin-bottom: 64px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-num {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(108,142,245,.2), rgba(167,139,250,.2));
+      border: 1px solid rgba(108,142,245,.3);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 28px 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3::before {
+      content: '';
+      display: inline-block;
+      width: 3px;
+      height: 16px;
+      border-radius: 2px;
+      background: linear-gradient(180deg, var(--accent), var(--accent2));
+    }
+
+    p { color: var(--muted); margin-bottom: 12px; }
+
+    /* TABLES */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin: 16px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+
+    thead tr {
+      background: var(--surface2);
+    }
+
+    th {
+      text-align: left;
+      padding: 10px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(46,51,80,.5);
+      color: var(--text);
+      vertical-align: top;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+
+    tbody tr:hover { background: rgba(255,255,255,.02); }
+
+    td code {
+      background: rgba(108,142,245,.12);
+      color: var(--accent);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    /* CODE BLOCKS */
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin: 16px 0;
+      overflow: hidden;
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .code-lang {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 5px;
+    }
+
+    .code-dots span {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+
+    .code-dots span:nth-child(1) { background: #f87171; }
+    .code-dots span:nth-child(2) { background: #fbbf24; }
+    .code-dots span:nth-child(3) { background: #34d399; }
+
+    pre {
+      padding: 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    pre code {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      color: #cdd9e5;
+      background: none;
+      padding: 0;
+      font-size: inherit;
+    }
+
+    /* Syntax colors */
+    .kw { color: #f97583; }
+    .cm { color: #6a737d; font-style: italic; }
+    .st { color: #9ecbff; }
+    .fn { color: #b392f0; }
+    .nm { color: #79b8ff; }
+    .op { color: #e1e4e8; }
+    .co { color: #34d399; }
+
+    /* SCHEMA GRID */
+    .schema-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    a.schema-card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      transition: border-color .2s, background .2s, transform .2s, box-shadow .2s;
+      cursor: pointer;
+      position: relative;
+    }
+
+    a.schema-card::after {
+      content: '↓';
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      font-size: 11px;
+      color: var(--border);
+      transition: color .2s, transform .2s;
+    }
+
+    a.schema-card:hover {
+      border-color: var(--accent);
+      background: var(--surface2);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
+    }
+
+    a.schema-card:hover::after {
+      color: var(--accent);
+      transform: translateY(2px);
+    }
+
+    a.schema-card:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .schema-block {
+      scroll-margin-top: 36px;
+      margin: 8px -16px 24px;
+      padding: 16px 16px 8px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      transition: border-color .4s, background .4s, box-shadow .4s;
+    }
+
+    .schema-block.is-lit {
+      border-color: rgba(108,142,245,.65);
+      background: linear-gradient(135deg, rgba(108,142,245,.14), rgba(167,139,250,.08));
+      box-shadow:
+        0 0 0 1px rgba(108,142,245,.25),
+        0 0 40px rgba(108,142,245,.35),
+        inset 0 1px 0 rgba(255,255,255,.06);
+      animation: schemaGlowIn .35s ease-out, schemaGlowPulse 1s ease-in-out .35s;
+    }
+
+    .schema-block.is-lit h3.schema-anchor {
+      color: #c7d7ff;
+    }
+
+    .schema-block.is-lit h3.schema-anchor::before {
+      background: var(--accent);
+      box-shadow: 0 0 14px rgba(108,142,245,.8);
+      width: 4px;
+    }
+
+    .schema-block.is-lit .table-wrap {
+      border-color: rgba(108,142,245,.45);
+      box-shadow: 0 0 20px rgba(108,142,245,.12);
+    }
+
+    @keyframes schemaGlowIn {
+      from {
+        opacity: .3;
+        transform: scale(.985);
+        box-shadow: 0 0 0 rgba(108,142,245,0);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes schemaGlowPulse {
+      0%, 100% {
+        box-shadow:
+          0 0 0 1px rgba(108,142,245,.3),
+          0 0 28px rgba(108,142,245,.28);
+      }
+      50% {
+        box-shadow:
+          0 0 0 1px rgba(108,142,245,.55),
+          0 0 48px rgba(108,142,245,.45);
+      }
+    }
+
+    h3.schema-anchor { transition: color .3s; }
+
+    /* BACK TO TOP */
+    .back-to-top {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: 1px solid rgba(108,142,245,.4);
+      background: linear-gradient(135deg, var(--surface2), var(--surface));
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,.35);
+      z-index: 200;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(16px) scale(.9);
+      transition: opacity .25s, visibility .25s, transform .25s, border-color .2s, box-shadow .2s;
+    }
+
+    .back-to-top.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+    }
+
+    .back-to-top:hover {
+      border-color: var(--accent);
+      box-shadow: 0 6px 28px rgba(108,142,245,.25);
+      color: var(--text);
+    }
+
+    .back-to-top svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .schema-card .schema-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .schema-card .schema-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .schema-intro {
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.65;
+      margin: 0 0 16px;
+      padding: 14px 16px;
+      background: rgba(108,142,245,.06);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .schema-intro strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .schema-intro ul {
+      margin: 8px 0 0 18px;
+      padding: 0;
+    }
+
+    .schema-intro li {
+      margin-bottom: 4px;
+    }
+
+    .schema-card .schema-tag {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(108,142,245,.1);
+      color: var(--accent);
+    }
+
+    .schema-card.optional .schema-tag {
+      background: rgba(167,139,250,.1);
+      color: var(--accent2);
+    }
+
+    /* FLOW STEPS */
+    .flow-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 20px 0;
+    }
+
+    .flow-step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .flow-step-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .step-line {
+      width: 1px;
+      flex: 1;
+      min-height: 24px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+
+    .flow-step:last-child .step-line { display: none; }
+
+    .step-body {
+      padding-bottom: 20px;
+      flex: 1;
+    }
+
+    .step-body strong {
+      display: block;
+      font-size: 13.5px;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+
+    .step-body span {
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    /* STATUS BADGES */
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+
+    .status::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+    }
+
+    .status-done { background: rgba(52,211,153,.12); color: var(--green); border: 1px solid rgba(52,211,153,.25); }
+    .status-done::before { background: var(--green); }
+    .status-pending { background: rgba(251,191,36,.12); color: var(--yellow); border: 1px solid rgba(251,191,36,.25); }
+    .status-pending::before { background: var(--yellow); }
+    .status-partial { background: rgba(108,142,245,.12); color: var(--accent); border: 1px solid rgba(108,142,245,.25); }
+    .status-partial::before { background: var(--accent); }
+
+    /* CHECKLIST */
+    .checklist {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 16px 0;
+    }
+
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13.5px;
+      color: var(--muted);
+    }
+
+    .checklist li .check {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 1.5px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--accent);
+    }
+
+    /* FOOTER */
+    .doc-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .doc-footer p {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="badge">Trace Core</div>
+    <h1>Guida operativa</h1>
+    <p>PostgreSQL · Multi-tenant · RLS</p>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Architettura</div>
+    <a href="#s1" class="nav-link"><span class="num">01</span> Architettura</a>
+    <a href="#s2" class="nav-link"><span class="num">02</span> Tabelle principali</a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Operativo</div>
+    <a href="#s3-pneumatici" class="nav-link"><span class="num">03A</span> Flusso pneumatici</a>
+    <a href="#s3-caldaia" class="nav-link"><span class="num">03B</span> Flusso caldaia</a>
+    <a href="#s4" class="nav-link"><span class="num">04</span> Nuovo cliente (tenant)</a>
+    <a href="#s5" class="nav-link"><span class="num">05</span> Eventi unità</a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Riferimento</div>
+    <a href="#s6" class="nav-link"><span class="num">06</span> Cosa usare ora</a>
+    <a href="#s7" class="nav-link"><span class="num">07</span> Modifiche al DB</a>
+    <a href="#s8" class="nav-link"><span class="num">08</span> Da MySQL a Trace Core</a>
+    <a href="#s9" class="nav-link"><span class="num">09</span> Checklist</a>
+    <a href="#s10" class="nav-link"><span class="num">10</span> Registro</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- HEADER -->
+  <div class="doc-header" id="top">
+    <h1>Trace Core — Guida operativa</h1>
+    <p class="subtitle">PostgreSQL multi-tenant: tabelle, flussi e passi operativi.</p>
+    <div class="meta-row">
+      <div class="meta-item"><span class="dot"></span> Ultimo aggiornamento: 2026-05-27</div>
+      <div class="meta-item">• DB: <code>alphatrace_ace</code></div>
+    </div>
+  </div>
+
+  <!-- ===== SEZIONE 1 ===== -->
+  <div class="section" id="s1">
+    <div class="section-header">
+      <span class="section-num">1</span>
+      <h2 class="section-title">Architettura generale</h2>
+    </div>
+
+    <h3>Un solo database, molti clienti</h3>
+    <p>
+      Database unico (es. <code>alphatrace_ace</code>). Il cliente si identifica con <code>slug</code> (<code>demo</code>, <code>alphatrace_boa</code>, …).
+      Non si crea un DB per tenant come in Stancl/MySQL.
+    </p>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">🔒</span>
+      <div class="callout-body">
+        <strong>Cos'è RLS (Row Level Security)?</strong>
+        PostgreSQL filtra automaticamente le righe in base al tenant attivo nella sessione. Senza <code>SET app.current_tenant_id = '1'</code>, le query su tabelle tenant-scoped restituiscono zero righe.
+      </div>
+    </div>
+
+    <h3>Schema (moduli logici) — versione semplificata</h3>
+    <div class="schema-grid">
+      <a href="#schema-core" class="schema-card">
+        <div class="schema-name">core</div>
+        <div class="schema-desc">Identità SaaS e sicurezza: tenant, utenti, ruoli, permessi, organizations e domini. Base per RLS e risoluzione multi-tenant.</div>
+        <span class="schema-tag">Core</span>
+      </a>
+      <a href="#schema-master_data" class="schema-card">
+        <div class="schema-name">master_data</div>
+        <div class="schema-desc">Dati anagrafici unificati: categorie e tipi prodotto, siti e regole di stoccaggio minime. Unisce catalog + location per semplicità.</div>
+        <span class="schema-tag">Core</span>
+      </a>
+      <a href="#schema-operations" class="schema-card">
+        <div class="schema-name">operations</div>
+        <div class="schema-desc">Transazioni operative: unità tracciate, storico eventi, ordini di lavoro (ODL), righe ODL, spedizioni e assegnazioni.</div>
+        <span class="schema-tag">Core</span>
+      </a>
+      <a href="#schema-audit" class="schema-card">
+        <div class="schema-name">audit</div>
+        <div class="schema-desc">Storico informativo obbligatorio: chi ha fatto cosa e quando su UI/API. Da mantenere semplice senza feature avanzate.</div>
+        <span class="schema-tag">Core</span>
+      </a>
+    </div>
+    <div class="callout callout-info">
+      <span class="callout-icon">🧩</span>
+      <div class="callout-body">
+        <strong>Scelta architetturale attuale: pochi blocchi, manutenzione facile</strong>
+        Per la fase iniziale il modello consigliato è: <code>core</code> + <code>master_data</code> + <code>operations</code> + <code>audit</code>.
+      </div>
+    </div>
+
+    <h3>Contesto tenant in ogni sessione</h3>
+    <p>Prima di interrogare o scrivere dati di business:</p>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">SQL</span>
+        <div class="code-dots"><span></span><span></span><span></span></div>
+      </div>
+      <pre><code><span class="cm">-- Obbligatorio all'inizio di ogni sessione / query</span>
+<span class="kw">SET</span> app.current_tenant_id = <span class="st">'1'</span>;
+
+<span class="cm">-- In Laravel il middleware InitializeTenancy esegue l'equivalente:</span>
+<span class="cm">-- set_config('app.current_tenant_id', $tenant->id, false)</span></code></pre>
+    </div>
+
+    <div class="callout callout-danger">
+      <span class="callout-icon">🚫</span>
+      <div class="callout-body">
+        <strong>Senza questo SET, RLS restituisce zero righe</strong>
+        Ogni nuova scheda SQL in DBeaver è una sessione nuova — ricordare di aggiungere sempre il SET prima di qualsiasi query su tabelle tenant-scoped.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SEZIONE 2 ===== -->
+  <div class="section" id="s2">
+    <div class="section-header">
+      <span class="section-num">2</span>
+      <h2 class="section-title">Tabelle principali</h2>
+    </div>
+
+    <p>Riferimento rapido — non serve memorizzare tutto; usare durante sviluppo o query SQL.</p>
+
+    <div class="schema-block" id="schema-core">
+      <h3 class="schema-anchor">core (12 tabelle)</h3>
+      <div class="schema-intro">
+        <strong>Ruolo infrastrutturale:</strong> layer di identità e accesso del SaaS. Ogni riga di business è legata a un <code>tenant_id</code>; le policy RLS su questo schema (e sugli altri) filtrano in base a <code>app.current_tenant_id</code> impostato a inizio sessione o request API.
+        <ul>
+          <li><strong>tenants</strong> — record del cliente (es. <code>slug = demo</code>); non si crea un database PostgreSQL per tenant.</li>
+          <li><strong>tenant_domains</strong> — risoluzione hostname → tenant (produzione); in dev spesso si usa header <code>X-Tenant</code>.</li>
+          <li><strong>users / roles / permissions</strong> — autenticazione applicativa e RBAC; token Sanctum in <code>core.personal_access_tokens</code>.</li>
+          <li><strong>organizations</strong> — anagrafiche operative (cliente, fornitore, vettore); referenziate dagli ODL in <code>operations</code>.</li>
+        </ul>
+        <strong>Non contiene:</strong> beni fisici serializzati, magazzini dettagliati né ordini di lavoro.
+      </div>
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tabella</th><th>Descrizione</th></tr></thead>
+        <tbody>
+          <tr><td><code>migrations</code></td><td>Registro migration applicate nell'ambiente corrente</td></tr>
+          <tr><td><code>tenants</code></td><td>Registro del cliente SaaS (<code>slug</code>, <code>name</code>, <code>settings</code>)</td></tr>
+          <tr><td><code>tenant_domains</code></td><td>Mapping hostname → tenant</td></tr>
+          <tr><td><code>organizations</code></td><td>Clienti, fornitori, trasportatori (<code>org_type</code>)</td></tr>
+          <tr><td><code>users</code></td><td>Utenti del tenant (<code>username</code>, <code>password_hash</code>)</td></tr>
+          <tr><td><code>roles</code></td><td>Ruoli applicativi per RBAC</td></tr>
+          <tr><td><code>permissions</code></td><td>Permessi granulari applicativi</td></tr>
+          <tr><td><code>user_roles</code></td><td>Associazione utenti ↔ ruoli</td></tr>
+          <tr><td><code>role_permissions</code></td><td>Associazione ruoli ↔ permessi</td></tr>
+          <tr><td><code>password_reset_tokens</code></td><td>Token di reset password</td></tr>
+          <tr><td><code>personal_access_tokens</code></td><td>Token personali API (Sanctum)</td></tr>
+          <tr><td><code>sector_profiles</code></td><td>Template globali di onboarding per settore</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="schema-block" id="schema-master_data">
+      <h3 class="schema-anchor">master_data (4 tabelle)</h3>
+      <div class="schema-intro">
+        <strong>Ruolo infrastrutturale:</strong> dati anagrafici unificati per ridurre il numero di schemi. Include sia catalogo prodotto sia ubicazioni minime.
+        <ul>
+          <li><strong>product_categories</strong> — famiglia (es. valigie); flag <code>is_traceable</code>, <code>is_perishable</code> guidano validazioni a valle.</li>
+          <li><strong>product_types</strong> — modello/SKU concreto; ogni <code>tracked_units</code> punta a un <code>product_type_id</code>.</li>
+          <li><strong>sites</strong> — magazzino/hub/sede solo se utile operativamente; nessun obbligo di modellazione avanzata in MVP.</li>
+          <li><strong>site_storage_slots</strong> — opzionale: abilitare solo se serve controllo forte su cosa può essere stoccato dove.</li>
+        </ul>
+        <strong>Distinzione importante:</strong> qui non esiste numero di serie né QR — quelli vivono in <code>operations</code> (asset operativi).
+      </div>
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tabella</th><th>Descrizione</th></tr></thead>
+        <tbody>
+          <tr><td><code>product_categories</code></td><td>Famiglia di prodotto (es. valigie). Flag <code>is_traceable</code>, <code>is_perishable</code></td></tr>
+          <tr><td><code>product_types</code></td><td>Modello concreto (codice, nome, validità, <code>metadata</code>)</td></tr>
+          <tr><td><code>sites</code></td><td>Luogo fisico essenziale (<code>code</code>, <code>name</code>, <code>organization_id</code> opzionale)</td></tr>
+          <tr><td><code>site_storage_slots</code></td><td>Regola opzionale site ↔ tipo prodotto</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div class="schema-block" id="schema-operations">
+      <h3 class="schema-anchor">operations (8 tabelle)</h3>
+      <div class="schema-intro">
+        <strong>Ruolo infrastrutturale:</strong> cuore operativo con tutto il transazionale giornaliero: unità tracciate, eventi e ordini di lavoro.
+        <ul>
+          <li><strong>identifier_batches / identifiers</strong> — generazione e registro codici QR/barcode.</li>
+          <li><strong>tracked_units</strong> — pezzo fisico univoco per tenant (<code>serial_number</code>) con stato attuale.</li>
+          <li><strong>tracked_unit_events</strong> — journal append-only: ogni cambio stato/ubicazione rilevante.</li>
+          <li><strong>work_orders / work_order_lines</strong> — processo ODL e collegamento unità ↔ ODL.</li>
+        </ul>
+        <strong>Regola operativa:</strong> stato corrente su <code>tracked_units</code>; cronologia su <code>tracked_unit_events</code>; ordini su <code>work_orders</code>.
+      </div>
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tabella</th><th>Descrizione</th></tr></thead>
+        <tbody>
+          <tr><td><code>identifier_batches</code></td><td>Lotto di codici QR/barcode generati</td></tr>
+          <tr><td><code>identifiers</code></td><td>Codice individuale (<code>code</code>, <code>identifier_type</code>)</td></tr>
+          <tr><td><code>tracked_units</code></td><td>Unità fisica serializzata (sostituisce <code>articoli</code>)</td></tr>
+          <tr><td><code>tracked_unit_events</code></td><td>Storico append-only dell'unità (vedi sezione 5)</td></tr>
+          <tr><td><code>work_orders</code></td><td>ODL (campo <code>flow_code</code> opzionale in MVP)</td></tr>
+          <tr><td><code>work_order_lines</code></td><td>Collegamento unità ↔ ODL (<code>direction</code>: <code>in</code> o <code>out</code>)</td></tr>
+          <tr><td><code>work_order_shipments</code></td><td>Dati di spedizione</td></tr>
+          <tr><td><code>work_order_assignees</code></td><td>Ispettori od operatori</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>Campi chiave di <code>tracked_units</code>: <code>serial_number</code> (unico per tenant), <code>lifecycle_status_code</code>, <code>product_type_id</code>, <code>identifier_id</code>, <code>site_storage_slot_id</code> (nullable), <code>metadata</code> (JSON).</p>
+    </div>
+
+    <div class="schema-block" id="schema-audit">
+      <h3 class="schema-anchor">audit (1 tabella)</h3>
+      <div class="schema-intro">
+        <strong>Ruolo infrastrutturale:</strong> audit trail applicativo (chi ha fatto cosa nell'interfaccia o API). Da mantenere obbligatorio ma semplice: valore informativo e storico operativo.
+        <ul>
+          <li>Tabella tipica: <code>audit_events</code> — modulo, azione, payload JSON, riferimento utente.</li>
+          <li>Evitare subito strutture avanzate: basta scrivere evento, utente, timestamp, modulo e azione.</li>
+        </ul>
+        <strong>Non confondere con:</strong> <code>operations.tracked_unit_events</code> (eventi di dominio sull'unità tracciata). I due flussi convivono e servono scopi diversi.
+      </div>
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tabella</th><th>Descrizione</th></tr></thead>
+        <tbody>
+          <tr><td><code>audit_events</code></td><td>Azioni utente nell'app (modulo, azione, payload). Storico informativo; non sostituisce lo storico di dominio in <code>tracked_unit_events</code>.</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== SEZIONE 3A ===== -->
+  <div class="section" id="s3-pneumatici">
+    <div class="section-header">
+      <span class="section-num">3A</span>
+      <h2 class="section-title">Flusso pneumatici (TirEco / PFU)</h2>
+    </div>
+
+    <p>Tracciamento completo del pneumatico: produzione, installazione, presa in carico, rivendita usato oppure smaltimento tramite consorzio.</p>
+
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">1</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>Censire categoria e tipo pneumatico</strong><span><code>master_data.product_categories</code> + <code>master_data.product_types</code></span></div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">2</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>Generare identificativo univoco</strong><span><code>operations.identifier_batches</code> + <code>operations.identifiers</code> (microchip/QR)</span></div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">3</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>Creare anagrafe unita' pneumatico</strong><span><code>operations.tracked_units</code> con seriale, DOT, owner iniziale e stato</span></div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">4</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>Installazione su veicolo e cambio owner</strong><span>Aggiornare owner/km/data e registrare evento in <code>operations.tracked_unit_events</code></span></div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">5</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>Presa in carico da gommista/officina</strong><span>Verifica titolarita', apertura <code>operations.work_orders</code> e righe in <code>work_order_lines</code></span></div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">6</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>Esito operativo</strong><span>Rivendita usato (nuovo owner) <em>oppure</em> consegna a consorzio e stato finale di smaltimento</span></div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">7</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>Audit obbligatorio</strong><span>Ogni passaggio critico registra traccia in <code>audit.audit_events</code></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SEZIONE 3B ===== -->
+  <div class="section" id="s3-caldaia">
+    <div class="section-header">
+      <span class="section-num">3B</span>
+      <h2 class="section-title">Flusso caldaia (esempio manutenzione)</h2>
+    </div>
+
+    <p>Esempio dominio tecnico: dalla registrazione impianto alla manutenzione periodica, fino a sostituzione/dismissione.</p>
+
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">1</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>Definire tipo caldaia</strong><span><code>master_data.product_categories</code> + <code>master_data.product_types</code></span></div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">2</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>Definire luogo impianto</strong><span><code>master_data.sites</code> e, se serve, <code>site_storage_slots</code></span></div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">3</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>Creare unita' caldaia</strong><span><code>operations.identifiers</code> + <code>operations.tracked_units</code> (seriale e stato installato)</span></div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">4</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>Aprire ordine intervento</strong><span><code>operations.work_orders</code> + <code>work_order_lines</code> + assegnazione tecnico</span></div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">5</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>Registrare esito manutenzione</strong><span>Aggiornare stato e scrivere dettagli in <code>operations.tracked_unit_events</code></span></div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">6</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>Chiusura ciclo tecnico</strong><span>Nuovo work order per sostituzione/dismissione e audit finale in <code>audit.audit_events</code></span></div>
+      </div>
+    </div>
+
+    <div class="callout callout-success">
+      <span class="callout-icon">✅</span>
+      <div class="callout-body">
+        <strong>Regola valida in tutti i flussi</strong>
+        Stato corrente in <code>operations.tracked_units</code> · Storico dominio in <code>operations.tracked_unit_events</code> · Storico utente in <code>audit.audit_events</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SEZIONE 4 ===== -->
+  <div class="section" id="s4">
+    <div class="section-header">
+      <span class="section-num">4</span>
+      <h2 class="section-title">Nuovo cliente (tenant)</h2>
+    </div>
+
+    <h3>Creare un nuovo cliente</h3>
+    <p>Solo righe nel DB esistente — niente nuovo database né migration “per tenant”.</p>
+
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">1</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>Insert in <code>core.tenants</code></strong><span>Onboarding diretto su DB operativo</span></div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">2</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>Insert in <code>core.tenant_domains</code></strong><span>Mapping hostname → tenant</span></div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">3</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>Seed ruoli, utente admin e permessi</strong><span>Solo dati necessari al bootstrap MVP</span></div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-left"><div class="step-num">4</div><div class="step-line"></div></div>
+        <div class="step-body"><strong>L'applicazione risolve il tenant</strong><span>Per dominio, query <code>?tenant=</code> o header <code>X-Tenant</code></span></div>
+      </div>
+    </div>
+
+    <h3>Configurazione Laravel (.env)</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">.env</span>
+        <div class="code-dots"><span></span><span></span><span></span></div>
+      </div>
+      <pre><code><span class="nm">DB_CONNECTION</span>=<span class="st">pgsql</span>
+<span class="nm">DB_DATABASE</span>=<span class="st">alphatrace_ace</span>
+<span class="nm">TRACE_CORE</span>=<span class="st">true</span>
+<span class="nm">TRACE_DEFAULT_TENANT_SLUG</span>=<span class="st">demo</span></code></pre>
+    </div>
+
+    <h3>Test di connessione</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">Bash</span>
+        <div class="code-dots"><span></span><span></span><span></span></div>
+      </div>
+      <pre><code>curl -H <span class="st">"X-Tenant: demo"</span> http://127.0.0.1:8000/api/trace/health</code></pre>
+    </div>
+  </div>
+
+  <!-- ===== SEZIONE 5 ===== -->
+  <div class="section" id="s5">
+    <div class="section-header">
+      <span class="section-num">5</span>
+      <h2 class="section-title">Eventi unità (<code>tracked_unit_events</code>)</h2>
+    </div>
+
+    <p>Timeline di ogni unità: solo INSERT (storico immutabile).</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Colonna</th><th>Tipo</th><th>Descrizione</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>bigserial</td><td>PK</td></tr>
+          <tr><td><code>tenant_id</code></td><td>bigint</td><td>FK tenants</td></tr>
+          <tr><td><code>tracked_unit_id</code></td><td>bigint</td><td>FK tracked_units</td></tr>
+          <tr><td><code>event_type</code></td><td>varchar(64)</td><td>Tipo di evento (vedere sotto)</td></tr>
+          <tr><td><code>from_value</code></td><td>varchar(255)</td><td>Valore precedente (es. stato)</td></tr>
+          <tr><td><code>to_value</code></td><td>varchar(255)</td><td>Valore nuovo</td></tr>
+          <tr><td><code>work_order_id</code></td><td>bigint</td><td>ODL correlato, nullable</td></tr>
+          <tr><td><code>actor_user_id</code></td><td>bigint</td><td>Utente, nullable</td></tr>
+          <tr><td><code>payload</code></td><td>jsonb</td><td>Dettaglio libero</td></tr>
+          <tr><td><code>occurred_at</code></td><td>timestamptz</td><td>Quando è avvenuto</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Tipi di evento (convenzione)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>event_type</th><th>Quando usarlo</th></tr></thead>
+        <tbody>
+          <tr><td><code>status_change</code></td><td>Cambio di <code>lifecycle_status_code</code></td></tr>
+          <tr><td><code>location_change</code></td><td>Cambio di slot/site</td></tr>
+          <tr><td><code>work_order_linked</code></td><td>Unità associata a un ODL</td></tr>
+          <tr><td><code>identifier_assigned</code></td><td>QR assegnato</td></tr>
+          <tr><td><code>scan</code></td><td>Lettura in campo</td></tr>
+          <tr><td><code>note</code></td><td>Nota operativa</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Query storico</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">SQL</span>
+        <div class="code-dots"><span></span><span></span><span></span></div>
+      </div>
+      <pre><code><span class="kw">SET</span> app.current_tenant_id = <span class="st">'1'</span>;
+
+<span class="kw">SELECT</span> event_type, from_value, to_value, occurred_at
+<span class="kw">FROM</span> operations.tracked_unit_events
+<span class="kw">WHERE</span> tracked_unit_id = <span class="nm">1</span>
+<span class="kw">ORDER BY</span> occurred_at <span class="kw">DESC</span>;</code></pre>
+    </div>
+
+    <h3>Esempio inserimento cambio stato</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">SQL</span>
+        <div class="code-dots"><span></span><span></span><span></span></div>
+      </div>
+      <pre><code><span class="kw">INSERT INTO</span> operations.tracked_unit_events (
+    tenant_id, tracked_unit_id, event_type,
+    from_value, to_value, actor_user_id
+) <span class="kw">VALUES</span> (
+    <span class="nm">1</span>, <span class="nm">1</span>, <span class="st">'status_change'</span>,
+    <span class="st">'initial'</span>, <span class="st">'in_stock'</span>, <span class="nm">1</span>
+);</code></pre>
+    </div>
+
+    <h3>Installare la tabella (se manca)</h3>
+    <p><strong>Opzione A — Laravel:</strong> <code>php artisan migrate</code> (migration <code>create_tracked_unit_events_table</code>).</p>
+    <p><strong>Opzione B — SQL:</strong> eseguire <code>database/sql/trace_core/001_tracked_unit_events.sql</code> con <code>psql</code>.</p>
+    <div class="callout callout-warn">
+      <span class="callout-icon">⚠️</span>
+      <div class="callout-body">
+        <strong>Una sola opzione</strong>
+        Migration Laravel <em>oppure</em> SQL manuale — mai entrambe sullo stesso DB.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SEZIONE 6 ===== -->
+  <div class="section" id="s6">
+    <div class="section-header">
+      <span class="section-num">6</span>
+      <h2 class="section-title">Cosa usare ora</h2>
+    </div>
+
+    <h3>Nucleo MVP — usare dall'inizio (consigliato)</h3>
+    <div class="callout callout-success">
+      <span class="callout-icon">✅</span>
+      <div class="callout-body">
+        <strong>Blocchi consigliati per semplicità</strong>
+        <code>core</code> · <code>master_data</code> · <code>operations</code> · <code>audit</code> (obbligatorio per storico informativo)
+      </div>
+    </div>
+
+    <h3>Fuori scope per ora</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Blocco/Modulo</th><th>Quando usarlo</th></tr></thead>
+        <tbody>
+          <tr><td><code>platform</code> (<code>lifecycle_*</code>, <code>flow_*</code>)</td><td>Schema rimosso nella fase attuale; reintrodurre solo con requisito reale</td></tr>
+          <tr><td><code>mod_supplier</code> / <code>mod_fleet</code></td><td>Schemi rimossi; reintrodurre solo per moduli verticali dedicati</td></tr>
+          <tr><td><code>entity_attribute_*</code>, <code>json_schema_registry</code></td><td>Da evitare nel MVP per ridurre complessità e manutenzione</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">💡</span>
+      <div class="callout-body">
+        <strong>Principio guida: semplicità prima</strong>
+        Mantenere pochi blocchi attivi e introdurre il resto solo quando porta valore reale. <code>audit</code> resta sempre attivo per lo storico informativo.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SEZIONE 7 ===== -->
+  <div class="section" id="s7">
+    <div class="section-header">
+      <span class="section-num">7</span>
+      <h2 class="section-title">Modifiche al DB</h2>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Modifica</th><th>Come</th></tr></thead>
+        <tbody>
+          <tr><td>Schema già installato (<code>trace_core/*.sql</code>)</td><td>Fatto una volta, fuori da Laravel</td></tr>
+          <tr><td>Baseline Laravel</td><td><code>2026_05_26_180000_trace_core_schema_baseline.php</code></td></tr>
+          <tr><td>Nuova tabella o colonna</td><td>Nuova migration in <code>database/migrations/</code> con SQL PostgreSQL</td></tr>
+          <tr><td>Nuovo tenant</td><td>Onboarding / YAML, non <code>tenants:migrate</code></td></tr>
+          <tr><td>Nuovo stato unità</td><td>Aggiornare enum/convenzioni applicative in backend e documentare in guida</td></tr>
+          <tr><td>Nuovo flusso ODL avanzato</td><td>Fuori scope MVP; valutare reintroduzione schema <code>platform</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== SEZIONE 8 ===== -->
+  <div class="section" id="s8">
+    <div class="section-header">
+      <span class="section-num">8</span>
+      <h2 class="section-title">Da MySQL a Trace Core</h2>
+    </div>
+
+    <p>Tabella di equivalenza per chi conosce il modello vecchio (<code>articoli</code>, <code>odls</code>, DB per tenant).</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>MySQL (tenant DB)</th><th>PostgreSQL Trace Core</th></tr></thead>
+        <tbody>
+          <tr><td><code>anagrafiche</code></td><td><code>core.organizations</code></td></tr>
+          <tr><td><code>articoli</code></td><td><code>operations.tracked_units</code></td></tr>
+          <tr><td><code>articoli.stato</code></td><td><code>tracked_units.lifecycle_status_code</code></td></tr>
+          <tr><td><code>odls</code></td><td><code>operations.work_orders</code></td></tr>
+          <tr><td><code>odls.type</code></td><td><code>work_orders</code> + logica applicativa semplificata</td></tr>
+          <tr><td><code>odls_articles</code></td><td><code>operations.work_order_lines</code></td></tr>
+          <tr><td><code>magazzini</code></td><td><code>master_data.sites</code></td></tr>
+          <tr><td><code>qrcodes</code></td><td><code>operations.identifiers</code></td></tr>
+          <tr><td><code>users</code></td><td><code>core.users</code></td></tr>
+          <tr><td>Stancl DB per tenant</td><td><code>core.tenants</code> + RLS</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== SEZIONE 9 ===== -->
+  <div class="section" id="s9">
+    <div class="section-header">
+      <span class="section-num">9</span>
+      <h2 class="section-title">Checklist</h2>
+    </div>
+
+    <p>Prima di dire che un ambiente Trace Core è operativo:</p>
+
+    <ul class="checklist">
+      <li><span class="check">☐</span> PostgreSQL creato e script <code>trace_core</code> applicati</li>
+      <li><span class="check">☐</span> Almeno un tenant con utente admin, ruoli e permessi seedati</li>
+      <li><span class="check">☐</span> Ogni sessione SQL/API imposta <code>app.current_tenant_id</code></li>
+      <li><span class="check">☐</span> Tabella <code>tracked_unit_events</code> presente</li>
+      <li><span class="check">☐</span> Ogni cambio di stato importante genera un evento</li>
+    </ul>
+  </div>
+
+  <!-- ===== SEZIONE 10 ===== -->
+  <div class="section" id="s10">
+    <div class="section-header">
+      <span class="section-num">10</span>
+      <h2 class="section-title">Registro modifiche</h2>
+    </div>
+
+    <p>Dopo ogni modifica allo schema: una riga con data, descrizione e sezione.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Data</th><th>Modifica</th><th>Sezioni</th></tr></thead>
+        <tbody>
+          <tr>
+            <td style="white-space:nowrap;">2026-05-28</td>
+            <td>Allineamento finale al modello ridotto a 4 schemi attivi: <code>core</code>, <code>master_data</code>, <code>operations</code>, <code>audit</code>. Rimossi riferimenti operativi a <code>tracking</code>, <code>location</code>, <code>platform</code> e moduli opzionali.</td>
+            <td>1-9</td>
+          </tr>
+          <tr>
+            <td style="white-space:nowrap;">2026-05-27</td>
+            <td>Guida operativa iniziale. Schema Trace Core su PostgreSQL. Tabella <code>tracked_unit_events</code>. Riferimenti RLS e multi-tenant.</td>
+            <td>Tutte</td>
+          </tr>
+          <tr>
+            <td style="white-space:nowrap;">2026-05-27</td>
+            <td>Semplificazione: rimossi intro meta e snapshot Laravel.</td>
+            <td>nav</td>
+          </tr>
+          <tr>
+            <td style="color:var(--border);">—</td>
+            <td style="color:var(--border);">…</td>
+            <td style="color:var(--border);">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="doc-footer">
+    <p>Trace Core — Guida operativa · Ultima revisione: <strong>2026-05-27</strong></p>
+    <p>PostgreSQL multi-tenant · Schema <code>trace_core</code></p>
+  </div>
+
+</main>
+
+<a href="#top" class="back-to-top" id="backToTop" aria-label="Torna all'inizio" title="Torna su">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l-8 8h5v8h6v-8h5z"/></svg>
+</a>
+
+<script>
+  const sections = document.querySelectorAll('.section');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const backToTop = document.getElementById('backToTop');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const id = entry.target.id;
+        const active = document.querySelector(`.nav-link[href="#${id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  window.addEventListener('scroll', () => {
+    backToTop.classList.toggle('visible', window.scrollY > 400);
+  }, { passive: true });
+
+  function illuminateSchema(href) {
+    const block = document.querySelector(href);
+    if (!block || !block.classList.contains('schema-block')) return;
+
+    document.querySelectorAll('.schema-block.is-lit').forEach(b => b.classList.remove('is-lit'));
+    block.classList.remove('is-lit');
+    void block.offsetWidth;
+    block.classList.add('is-lit');
+
+    clearTimeout(block._litTimer);
+    block._litTimer = setTimeout(() => block.classList.remove('is-lit'), 1500);
+  }
+
+  function afterScroll(fn) {
+    let fired = false;
+    const run = () => { if (fired) return; fired = true; fn(); };
+    window.addEventListener('scrollend', run, { once: true });
+    setTimeout(run, 750);
+  }
+
+  document.querySelectorAll('a.schema-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const href = card.getAttribute('href');
+      afterScroll(() => illuminateSchema(href));
+    });
+  });
+
+  window.addEventListener('hashchange', () => {
+    if (location.hash.startsWith('#schema-')) {
+      afterScroll(() => illuminateSchema(location.hash));
+    }
+  });
+</script>
+
+</body>
+</html>
