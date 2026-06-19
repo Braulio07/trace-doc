@@ -780,8 +780,9 @@
     <h1>Trace Core — Guida operativa</h1>
     <p class="subtitle">PostgreSQL multi-tenant: tabelle, flussi e passi operativi.</p>
     <div class="meta-row">
-      <div class="meta-item"><span class="dot"></span> Ultimo aggiornamento: 2026-05-27</div>
+      <div class="meta-item"><span class="dot"></span> Ultimo aggiornamento: 2026-06-16</div>
       <div class="meta-item">• DB: <code>alphatrace_ace</code></div>
+      <div class="meta-item">• Schemi: <code>core</code> · <code>master_data</code> · <code>operations</code> · <code>audit</code></div>
     </div>
   </div>
 
@@ -790,6 +791,16 @@
     <div class="section-header">
       <span class="section-num">1</span>
       <h2 class="section-title">Architettura generale</h2>
+    </div>
+
+    <div class="callout callout-success">
+      <span class="callout-icon">✅</span>
+      <div class="callout-body">
+        <strong>Fonte di verità (per non divergere più)</strong>
+        Questa guida descrive l’architettura. Il catalogo tecnico reale di tabelle/colonne/FK è in
+        <code>guia-documentativa/SCHEMA-REFERENCE.md</code> (generato dal DB con <code>npm run db:schema</code>).
+        Dopo ogni migration o cambio DB, rigenerare quel file e aggiornare almeno le sezioni 1–2 qui.
+      </div>
     </div>
 
     <h3>Un solo database, molti clienti</h3>
@@ -834,6 +845,7 @@
       <div class="callout-body">
         <strong>Scelta architetturale attuale: pochi blocchi, manutenzione facile</strong>
         Per la fase iniziale il modello consigliato è: <code>core</code> + <code>master_data</code> + <code>operations</code> + <code>audit</code>.
+        Il backend Node usa <code>DB_SEARCH_PATH=core,master_data,operations,audit</code> — <strong>non</strong> crea tabelle in <code>public</code>.
       </div>
     </div>
 
@@ -868,9 +880,17 @@
     </div>
 
     <p>Riferimento rapido — non serve memorizzare tutto; usare durante sviluppo o query SQL.</p>
+    <div class="callout callout-info">
+      <span class="callout-icon">📌</span>
+      <div class="callout-body">
+        <strong>Riferimento completo</strong>
+        Per l’elenco completo (tabelle + colonne + relazioni) usare <code>SCHEMA-REFERENCE.md</code>.
+        Se questa sezione e il DB divergono, la fonte di verità è il file generato dal DB.
+      </div>
+    </div>
 
     <div class="schema-block" id="schema-core">
-      <h3 class="schema-anchor">core (12 tabelle)</h3>
+      <h3 class="schema-anchor">core (13 tabelle)</h3>
       <div class="schema-intro">
         <strong>Ruolo infrastrutturale:</strong> layer di identità e accesso del SaaS. Ogni riga di business è legata a un <code>tenant_id</code>; le policy RLS su questo schema (e sugli altri) filtrano in base a <code>app.current_tenant_id</code> impostato a inizio sessione o request API.
         <ul>
@@ -885,16 +905,17 @@
       <table>
         <thead><tr><th>Tabella</th><th>Descrizione</th></tr></thead>
         <tbody>
-          <tr><td><code>migrations</code></td><td>Registro migration applicate nell'ambiente corrente</td></tr>
+          <tr><td><code>migrations</code></td><td>Registro migration Laravel applicate nell'ambiente corrente</td></tr>
+          <tr><td><code>_node_migrations</code></td><td>Registro migration Node (<code>npm run db:migrate</code>)</td></tr>
           <tr><td><code>tenants</code></td><td>Registro del cliente SaaS (<code>slug</code>, <code>name</code>, <code>settings</code>)</td></tr>
           <tr><td><code>tenant_domains</code></td><td>Mapping hostname → tenant</td></tr>
           <tr><td><code>organizations</code></td><td>Clienti, fornitori, trasportatori (<code>org_type</code>)</td></tr>
-          <tr><td><code>users</code></td><td>Utenti del tenant (<code>username</code>, <code>password_hash</code>)</td></tr>
+          <tr><td><code>users</code></td><td>Utenti del tenant (<code>username</code>, <code>password_hash</code>, <code>lang_selected</code>)</td></tr>
           <tr><td><code>roles</code></td><td>Ruoli applicativi per RBAC</td></tr>
           <tr><td><code>permissions</code></td><td>Permessi granulari applicativi</td></tr>
           <tr><td><code>user_roles</code></td><td>Associazione utenti ↔ ruoli</td></tr>
           <tr><td><code>role_permissions</code></td><td>Associazione ruoli ↔ permessi</td></tr>
-          <tr><td><code>password_reset_tokens</code></td><td>Token di reset password</td></tr>
+          <tr><td><code>password_reset_tokens</code></td><td>Token reset password (<code>user_id</code>, <code>expires_at</code>, <code>used_at</code>). Scadenza: <code>RESET_TOKEN_EXPIRES_MIN</code> in .env</td></tr>
           <tr><td><code>personal_access_tokens</code></td><td>Token personali API (Sanctum)</td></tr>
           <tr><td><code>sector_profiles</code></td><td>Template globali di onboarding per settore</td></tr>
         </tbody>
@@ -957,7 +978,7 @@
     </div>
 
     <div class="schema-block" id="schema-audit">
-      <h3 class="schema-anchor">audit (1 tabella)</h3>
+      <h3 class="schema-anchor">audit (2 tabelle)</h3>
       <div class="schema-intro">
         <strong>Ruolo infrastrutturale:</strong> audit trail applicativo (chi ha fatto cosa nell'interfaccia o API). Da mantenere obbligatorio ma semplice: valore informativo e storico operativo.
         <ul>
@@ -971,6 +992,7 @@
         <thead><tr><th>Tabella</th><th>Descrizione</th></tr></thead>
         <tbody>
           <tr><td><code>audit_events</code></td><td>Azioni utente nell'app (modulo, azione, payload). Storico informativo; non sostituisce lo storico di dominio in <code>tracked_unit_events</code>.</td></tr>
+          <tr><td><code>audit_events_default</code></td><td>Partizione/tabella default per <code>audit_events</code> (PostgreSQL)</td></tr>
         </tbody>
       </table>
       </div>
@@ -1248,7 +1270,10 @@
         <tbody>
           <tr><td>Schema già installato (<code>trace_core/*.sql</code>)</td><td>Fatto una volta, fuori da Laravel</td></tr>
           <tr><td>Baseline Laravel</td><td><code>2026_05_26_180000_trace_core_schema_baseline.php</code></td></tr>
-          <tr><td>Nuova tabella o colonna</td><td>Nuova migration in <code>database/migrations/</code> con SQL PostgreSQL</td></tr>
+          <tr><td>Nuova tabella o colonna (Node)</td><td>Nuova migration in <code>src/db/migrations/00X_*.sql</code> con prefisso schema (<code>core.</code>, <code>operations.</code>, …)</td></tr>
+          <tr><td>Applicare migration Node</td><td><code>npm run db:migrate</code> — registro in <code>core._node_migrations</code></td></tr>
+          <tr><td>Aggiornare riferimento tabelle</td><td><code>npm run db:schema</code> → rigenera <code>SCHEMA-REFERENCE.md</code></td></tr>
+          <tr><td>Aggiornare questa guida</td><td>Sezioni 1–2 + riga nel Registro (sezione 10)</td></tr>
           <tr><td>Nuovo tenant</td><td>Onboarding / YAML, non <code>tenants:migrate</code></td></tr>
           <tr><td>Nuovo stato unità</td><td>Aggiornare enum/convenzioni applicative in backend e documentare in guida</td></tr>
           <tr><td>Nuovo flusso ODL avanzato</td><td>Fuori scope MVP; valutare reintroduzione schema <code>platform</code></td></tr>
@@ -1300,6 +1325,9 @@
       <li><span class="check">☐</span> Ogni sessione SQL/API imposta <code>app.current_tenant_id</code></li>
       <li><span class="check">☐</span> Tabella <code>tracked_unit_events</code> presente</li>
       <li><span class="check">☐</span> Ogni cambio di stato importante genera un evento</li>
+      <li><span class="check">☐</span> Backend Node con <code>DB_SEARCH_PATH=core,master_data,operations,audit</code></li>
+      <li><span class="check">☐</span> Nessuna tabella business duplicata in <code>public</code></li>
+      <li><span class="check">☐</span> <code>SCHEMA-REFERENCE.md</code> rigenerato e allineato al DB</li>
     </ul>
   </div>
 
@@ -1317,6 +1345,16 @@
         <thead><tr><th>Data</th><th>Modifica</th><th>Sezioni</th></tr></thead>
         <tbody>
           <tr>
+            <td style="white-space:nowrap;">2026-06-16</td>
+            <td>Aggiunto <code>core.users.lang_selected</code> (idioma perfil utente). Migration <code>005_users_lang_selected.sql</code>; rimossa colonna legacy <code>language</code>.</td>
+            <td>2, 10</td>
+          </tr>
+          <tr>
+            <td style="white-space:nowrap;">2026-06-16</td>
+            <td>Allineamento backend Node a Trace Core: <code>search_path</code> sui 4 schemi, migration <code>003</code>/<code>004</code> (reset password su <code>core.password_reset_tokens</code>, rimozione duplicati in <code>public</code>), generatore <code>npm run db:schema</code> e regola di aggiornamento documentazione.</td>
+            <td>1-2, 7, 9-10</td>
+          </tr>
+          <tr>
             <td style="white-space:nowrap;">2026-05-28</td>
             <td>Allineamento finale al modello ridotto a 4 schemi attivi: <code>core</code>, <code>master_data</code>, <code>operations</code>, <code>audit</code>. Rimossi riferimenti operativi a <code>tracking</code>, <code>location</code>, <code>platform</code> e moduli opzionali.</td>
             <td>1-9</td>
@@ -1331,11 +1369,6 @@
             <td>Semplificazione: rimossi intro meta e snapshot Laravel.</td>
             <td>nav</td>
           </tr>
-          <tr>
-            <td style="color:var(--border);">—</td>
-            <td style="color:var(--border);">…</td>
-            <td style="color:var(--border);">—</td>
-          </tr>
         </tbody>
       </table>
     </div>
@@ -1343,8 +1376,8 @@
 
   <!-- FOOTER -->
   <div class="doc-footer">
-    <p>Trace Core — Guida operativa · Ultima revisione: <strong>2026-05-27</strong></p>
-    <p>PostgreSQL multi-tenant · Schema <code>trace_core</code></p>
+    <p>Trace Core — Guida operativa · Ultima revisione: <strong>2026-06-16</strong></p>
+    <p>PostgreSQL multi-tenant · Schemi: <code>core</code> · <code>master_data</code> · <code>operations</code> · <code>audit</code></p>
   </div>
 
 </main>
